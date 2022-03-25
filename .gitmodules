@@ -10,3 +10,6 @@
 [submodule "lib/prb-math"]
 	path = lib/prb-math
 	url = https://github.com/hifi-finance/prb-math
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
