@@ -2,3 +2,4 @@ ds-test/=lib/ds-test/src/
 solmate/=lib/solmate/src/
 forge-std/=lib/forge-std/src/
 prb-math/=lib/prb-math/contracts/
+openzeppelin/=lib/openzeppelin-contracts/contracts/

@@ -7,9 +7,11 @@ import {console} from "./utils/Console.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {MockDiscreteGDA} from "./mocks/MockDiscreteGDA.sol";
 import {PRBMathSD59x18} from "prb-math/PRBMathSD59x18.sol";
+import {Strings} from "openzeppelin/utils/Strings.sol";
 
 contract DiscreteGDATest is DSTest {
     using PRBMathSD59x18 for int256;
+    using Strings for int256;
 
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
 
@@ -43,6 +45,20 @@ contract DiscreteGDATest is DSTest {
 
         purchasePrice = gda.purchasePrice(9);
         console.log(purchasePrice);
+    }
+
+    function testCorrectnessOne() public {
+        string[] memory inputs = new string[](3);
+        inputs[0] = "python3";
+        inputs[1] = "analysis/compute_price.py";
+        inputs[2] = "exp_discrete";
+        bytes memory res = vm.ffi(inputs);
+        console.logBytes(res);
+        bytes memory enc = abi.encode(1000);
+        console.logBytes(enc);
+
+        // uint256 num = abi.decode(res, (uint256));
+        // console.log("testNumber", num);
     }
 
     //make payable
