@@ -22,7 +22,7 @@ abstract contract DiscreteGDA is ERC721 {
     int256 internal decayConstant;
 
     ///@notice time of last purchase
-    uint256 internal lastPurchaseTime;
+    int256 internal auctionStartTime;
 
     error InsufficientPayment();
 
@@ -30,9 +30,11 @@ abstract contract DiscreteGDA is ERC721 {
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
-    {}
+    {
+        auctionStartTime = int256(block.timestamp).fromInt();
+    }
 
-    ///@notice purchase a specific number of tokens from the GDA 
+    ///@notice purchase a specific number of tokens from the GDA
     function purchaseTokens(uint256 numTokens, address to) public payable {
         uint256 cost = purchasePrice(numTokens);
         if (msg.value < cost) {
@@ -48,16 +50,19 @@ abstract contract DiscreteGDA is ERC721 {
         if (!sent) {
             revert UnableToRefund();
         }
-        lastPurchaseTime = block.timestamp;
     }
 
     ///@notice calculate purchase price using exponential discrete GDA formula
     function purchasePrice(uint256 numTokens) public view returns (uint256) {
         int256 quantity = int256(numTokens).fromInt();
-        int256 timeSincePurchase = int256(block.timestamp - lastPurchaseTime).fromInt();
-        int256 num1 = (quantity - timeSincePurchase.mul(decayConstant)).exp().mul(priceScale);
+        int256 numSold = int256(currentId).fromInt();
+        int256 timeSinceStart = int256(block.timestamp).fromInt() -
+            auctionStartTime;
+        int256 num1 = (numSold - timeSinceStart.mul(decayConstant)).exp().mul(
+            priceScale
+        );
         int256 num2 = quantity.exp() - PRBMathSD59x18.fromInt(1);
-        int256 den = PRBMathSD59x18.e() -  PRBMathSD59x18.fromInt(1);
+        int256 den = PRBMathSD59x18.e() - PRBMathSD59x18.fromInt(1);
         int256 totalCost = num1.mul(num2).div(den);
         return uint256(totalCost.toInt());
     }
