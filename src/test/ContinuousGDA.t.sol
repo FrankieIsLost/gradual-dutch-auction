@@ -5,13 +5,13 @@ import {DSTest} from "ds-test/test.sol";
 import {Utilities} from "./utils/Utilities.sol";
 import {console} from "./utils/Console.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {MockDiscreteGDA} from "./mocks/MockDiscreteGDA.sol";
+import {MockContinuousGDA} from "./mocks/MockContinuousGDA.sol";
 import {PRBMathSD59x18} from "prb-math/PRBMathSD59x18.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
 
 ///@notice test discrete GDA behaviour
 ///@dev run with --ffi flag to enable correctness tests
-contract DiscreteGDATest is DSTest {
+contract ContinuousGDATest is DSTest {
     using PRBMathSD59x18 for int256;
     using Strings for uint256;
 
@@ -19,50 +19,66 @@ contract DiscreteGDATest is DSTest {
 
     Utilities internal utils;
     address payable[] internal users;
-    MockDiscreteGDA internal gda;
+    MockContinuousGDA internal gda;
 
     int256 public priceScale = PRBMathSD59x18.fromInt(1000);
     int256 public decayConstant =
         PRBMathSD59x18.fromInt(1).div(PRBMathSD59x18.fromInt(2));
+    int256 public emissionRate = PRBMathSD59x18.fromInt(1);
 
     //encodings for revert tests
     bytes insufficientPayment =
         abi.encodeWithSignature("InsufficientPayment()");
+    bytes insufficientTokens =
+        abi.encodeWithSignature("InsufficientAvailableTokens()");
 
     function setUp() public {
         utils = new Utilities();
         users = utils.createUsers(5);
 
-        gda = new MockDiscreteGDA("Token", "TKN", priceScale, decayConstant);
-    }
-
-    function testInitialPrice() public {
-        //initialPrice should be price scale
-        uint256 initialPrice = uint256(priceScale.toInt());
-        //allow 0.1% deviation for rounding
-        uint256 leftBound = (initialPrice * 999) / 1000;
-        uint256 rightBound = (initialPrice * 1001) / 1000;
-
-        uint256 purchasePrice = gda.purchasePrice(1);
-        assertTrue(purchasePrice >= leftBound && purchasePrice <= rightBound);
+        gda = new MockContinuousGDA(
+            "Token",
+            "TKN",
+            priceScale,
+            decayConstant,
+            emissionRate
+        );
     }
 
     function testInsuffientPayment() public {
-        uint256 purchasePrice = gda.purchasePrice(1);
+        vm.warp(block.timestamp + 10);
+        uint256 purchaseAmount = 5;
+        uint256 purchasePrice = gda.purchasePrice(purchaseAmount);
+        console.log(purchasePrice);
         vm.deal(address(this), purchasePrice);
         vm.expectRevert(insufficientPayment);
-        gda.purchaseTokens{value: purchasePrice - 1}(1, address(this));
+        gda.purchaseTokens{value: purchasePrice - 1}(
+            purchaseAmount,
+            address(this)
+        );
+    }
+
+    function testInsufficientEmissions() public {
+        //10 tokens available for sale
+        vm.warp(block.timestamp + 10);
+        //attempt to purchase 11
+        vm.expectRevert(insufficientTokens);
+        gda.purchaseTokens(11, address(this));
     }
 
     function testMintCorrectly() public {
-        assertTrue(gda.ownerOf(1) != address(this));
-        uint256 purchasePrice = gda.purchasePrice(1);
+        vm.warp(block.timestamp + 10);
+        assertEq(gda.balanceOf(address(this)), 0);
+        uint256 purchaseAmount = 5;
+        uint256 purchasePrice = gda.purchasePrice(purchaseAmount);
+        assertTrue(purchasePrice > 0);
         vm.deal(address(this), purchasePrice);
-        gda.purchaseTokens{value: purchasePrice}(1, address(this));
-        assertTrue(gda.ownerOf(1) == address(this));
+        gda.purchaseTokens{value: purchasePrice}(purchaseAmount, address(this));
+        assertEq(gda.balanceOf(address(this)), purchaseAmount);
     }
 
     function testRefund() public {
+        vm.warp(block.timestamp + 10);
         uint256 purchasePrice = gda.purchasePrice(1);
         vm.deal(address(this), 2 * purchasePrice);
         //pay twice the purchase price
@@ -72,53 +88,49 @@ contract DiscreteGDATest is DSTest {
     }
 
     function testFFICorrectnessOne() public {
-        uint256 numTotalPurchases = 1;
-        uint256 timeSinceStart = 10;
+        uint256 ageOfLastAuction = 10;
         uint256 quantity = 9;
         checkPriceWithParameters(
             priceScale,
             decayConstant,
-            numTotalPurchases,
-            timeSinceStart,
+            emissionRate,
+            ageOfLastAuction,
             quantity
         );
     }
 
     function testFFICorrectnessTwo() public {
-        uint256 numTotalPurchases = 2;
-        uint256 timeSinceStart = 10;
-        uint256 quantity = 9;
+        uint256 ageOfLastAuction = 20;
+        uint256 quantity = 8;
         checkPriceWithParameters(
             priceScale,
             decayConstant,
-            numTotalPurchases,
-            timeSinceStart,
+            emissionRate,
+            ageOfLastAuction,
             quantity
         );
     }
 
     function testFFICorrectnessThree() public {
-        uint256 numTotalPurchases = 4;
-        uint256 timeSinceStart = 10;
-        uint256 quantity = 9;
+        uint256 ageOfLastAuction = 30;
+        uint256 quantity = 15;
         checkPriceWithParameters(
             priceScale,
             decayConstant,
-            numTotalPurchases,
-            timeSinceStart,
+            emissionRate,
+            ageOfLastAuction,
             quantity
         );
     }
 
     function testFFICorrectnessFour() public {
-        uint256 numTotalPurchases = 20;
-        uint256 timeSinceStart = 100;
-        uint256 quantity = 1;
+        uint256 ageOfLastAuction = 40;
+        uint256 quantity = 35;
         checkPriceWithParameters(
             priceScale,
             decayConstant,
-            numTotalPurchases,
-            timeSinceStart,
+            emissionRate,
+            ageOfLastAuction,
             quantity
         );
     }
@@ -127,35 +139,28 @@ contract DiscreteGDATest is DSTest {
     function checkPriceWithParameters(
         int256 _priceScale,
         int256 _decayConstant,
-        uint256 _numTotalPurchases,
-        uint256 _timeSinceStart,
+        int256 _emissionRate,
+        uint256 _ageOfLastAuction,
         uint256 _quantity
     ) private {
-        MockDiscreteGDA _gda = new MockDiscreteGDA(
+        MockContinuousGDA _gda = new MockContinuousGDA(
             "Token",
             "TKN",
-            _priceScale,
-            _decayConstant
-        );
-
-        //make past pruchases
-        uint256 purchasePrice = _gda.purchasePrice(_numTotalPurchases);
-        vm.deal(address(this), purchasePrice);
-        _gda.purchaseTokens{value: purchasePrice}(
-            _numTotalPurchases,
-            address(this)
+            priceScale,
+            decayConstant,
+            emissionRate
         );
 
         //move time forward
-        vm.warp(block.timestamp + _timeSinceStart);
+        vm.warp(block.timestamp + _ageOfLastAuction);
         //calculate actual price from gda
         uint256 actualPrice = _gda.purchasePrice(_quantity);
         //calculate expected price from python script
         uint256 expectedPrice = calculatePrice(
             _priceScale,
             _decayConstant,
-            _numTotalPurchases,
-            _timeSinceStart,
+            _emissionRate,
+            _ageOfLastAuction,
             _quantity
         );
         assertEq(actualPrice, expectedPrice);
@@ -165,22 +170,22 @@ contract DiscreteGDATest is DSTest {
     function calculatePrice(
         int256 _priceScale,
         int256 _decayConstant,
-        uint256 _numTotalPurchases,
-        uint256 _timeSinceStart,
+        int256 _emissionRate,
+        uint256 _ageOfLastAuction,
         uint256 _quantity
     ) private returns (uint256) {
         string[] memory inputs = new string[](13);
         inputs[0] = "python3";
         inputs[1] = "analysis/compute_price.py";
-        inputs[2] = "exp_discrete";
+        inputs[2] = "exp_continuous";
         inputs[3] = "--price_scale";
         inputs[4] = uint256(_priceScale).toString();
         inputs[5] = "--decay_constant";
         inputs[6] = uint256(_decayConstant).toString();
-        inputs[7] = "--num_total_purchases";
-        inputs[8] = _numTotalPurchases.toString();
-        inputs[9] = "--time_since_start";
-        inputs[10] = _timeSinceStart.toString();
+        inputs[7] = "--emission_rate";
+        inputs[8] = uint256(_emissionRate).toString();
+        inputs[9] = "--age_last_auction";
+        inputs[10] = _ageOfLastAuction.toString();
         inputs[11] = "--quantity";
         inputs[12] = _quantity.toString();
         bytes memory res = vm.ffi(inputs);

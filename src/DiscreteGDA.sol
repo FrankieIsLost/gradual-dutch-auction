@@ -21,7 +21,7 @@ abstract contract DiscreteGDA is ERC721 {
     ///@notice parameter that controls price decay, stored as a 59x18 fixed precision number
     int256 internal decayConstant;
 
-    ///@notice time of last purchase
+    ///@notice start time for all auctions, stored as a 59x18 fixed precision number
     int256 internal auctionStartTime;
 
     error InsufficientPayment();
