@@ -49,7 +49,6 @@ contract ContinuousGDATest is DSTest {
         vm.warp(block.timestamp + 10);
         uint256 purchaseAmount = 5;
         uint256 purchasePrice = gda.purchasePrice(purchaseAmount);
-        console.log(purchasePrice);
         vm.deal(address(this), purchasePrice);
         vm.expectRevert(insufficientPayment);
         gda.purchaseTokens{value: purchasePrice - 1}(

@@ -16,21 +16,26 @@ abstract contract DiscreteGDA is ERC721 {
     /// -----------------------------
 
     ///@notice parameter that scales initial price, stored as a 59x18 fixed precision number
-    int256 internal priceScale;
+    int256 internal immutable priceScale;
 
     ///@notice parameter that controls price decay, stored as a 59x18 fixed precision number
-    int256 internal decayConstant;
+    int256 internal immutable decayConstant;
 
     ///@notice start time for all auctions, stored as a 59x18 fixed precision number
-    int256 internal auctionStartTime;
+    int256 internal immutable auctionStartTime;
 
     error InsufficientPayment();
 
     error UnableToRefund();
 
-    constructor(string memory _name, string memory _symbol)
-        ERC721(_name, _symbol)
-    {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        int256 _priceScale,
+        int256 _decayConstant
+    ) ERC721(_name, _symbol) {
+        priceScale = _priceScale;
+        decayConstant = _decayConstant;
         auctionStartTime = int256(block.timestamp).fromInt();
     }
 

@@ -13,13 +13,13 @@ abstract contract ContinuousGDA is ERC20 {
     /// -----------------------------
 
     ///@notice parameter that scales initial price, stored as a 59x18 fixed precision number
-    int256 internal priceScale;
+    int256 internal immutable priceScale;
 
     ///@notice parameter that controls price decay, stored as a 59x18 fixed precision number
-    int256 internal decayConstant;
+    int256 internal immutable decayConstant;
 
     ///@notice emission rate, in tokens per second, stored as a 59x18 fixed precision number
-    int256 internal emissionRate;
+    int256 internal immutable emissionRate;
 
     ///@notice start time for last available auction, stored as a 59x18 fixed precision number
     int256 internal lastAvailableAuctionStartTime;
@@ -30,9 +30,16 @@ abstract contract ContinuousGDA is ERC20 {
 
     error UnableToRefund();
 
-    constructor(string memory _name, string memory _symbol)
-        ERC20(_name, _symbol, 18)
-    {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        int256 _priceScale,
+        int256 _decayConstant,
+        int256 _emissionRate
+    ) ERC20(_name, _symbol, 18) {
+        priceScale = _priceScale;
+        decayConstant = _decayConstant;
+        emissionRate = _emissionRate;
         lastAvailableAuctionStartTime = int256(block.timestamp).fromInt();
     }
 

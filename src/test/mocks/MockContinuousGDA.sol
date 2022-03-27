@@ -10,9 +10,13 @@ contract MockContinuousGDA is ContinuousGDA {
         int256 _priceScale,
         int256 _decayConstant,
         int256 _emissionRate
-    ) ContinuousGDA(_name, _symbol) {
-        priceScale = _priceScale;
-        decayConstant = _decayConstant;
-        emissionRate = _emissionRate;
-    }
+    )
+        ContinuousGDA(
+            _name,
+            _symbol,
+            _priceScale,
+            _decayConstant,
+            _emissionRate
+        )
+    {}
 }
