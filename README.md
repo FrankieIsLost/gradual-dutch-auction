@@ -1,6 +1,6 @@
-# Forge Template
+# Gradual Dutch Auction • [![CI](https://github.com/FrankieIsLost/gradual-dutch-auction/actions/workflows/CI.yml/badge.svg)](https://github.com/FrankieIsLost/gradual-dutch-auction/actions/workflows/CI.yml)
 
-A template for quickly getting started with forge
+An implementation of Continuous and Discrete Gradual Dutch Auctions. GDAs enable better price discovery when selling assets.
 
 ## Getting Started
 
@@ -22,7 +22,7 @@ Includes a `Utilities.sol` contract with common testing methods (like creating u
 
 ### Preinstalled dependencies
 
-`ds-test` for testing, `forge-std` for better cheatcode UX, and `solmate` for optimized contract implementations.  
+`ds-test` for testing, `forge-std` for better cheatcode UX, and `solmate` for optimized contract implementations.
 
 ### Linting
 
