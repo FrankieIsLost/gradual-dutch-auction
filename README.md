@@ -2,45 +2,15 @@
 
 An implementation of Continuous and Discrete Gradual Dutch Auctions. GDAs enable better price discovery when selling assets.
 
+This repo contains a sample solidity implementation, as well as python notebook modeling the mechanisms behaviour. Correctness testing between python and solidity versions is done via Forge FFI. 
+
 ## Getting Started
 
-```
-mkdir my-project
-cd my-project
-forge init --template https://github.com/FrankieIsLost/forge-template
-git submodule update --init --recursive  ## initialize submodule dependencies
-npm install ## install development dependencies
+```sh
+git clone https://github.com/FrankieIsLost/gradual-dutch-auction
+cd gradual-dutch-auction
+git submodule update --init --recursive  ##initialize submodule dependencies
 forge build
-forge test
+forge test --no-match-test FFI ##run non-FFI tests
+forge test --match-test FFI --ffi ##run FFI tests
 ```
-
-## Features
-
-### Testing Utilities
-
-Includes a `Utilities.sol` contract with common testing methods (like creating users with an initial balance), as well as various other utility contracts.
-
-### Preinstalled dependencies
-
-`ds-test` for testing, `forge-std` for better cheatcode UX, and `solmate` for optimized contract implementations.
-
-### Linting
-
-Pre-configured `solhint` and `prettier-plugin-solidity`. Can be run by
-
-```
-npm run solhint
-npm run prettier
-```
-
-### CI with Github Actions
-
-Automatically run linting and tests on pull requests.
-
-### Default Configuration
-
-Including `.gitignore`, `.vscode`, `remappings.txt`
-
-## Acknowledgement
-
-Inspired by great dapptools templates like https://github.com/gakonst/forge-template, https://github.com/gakonst/dapptools-template and https://github.com/transmissions11/dapptools-template
