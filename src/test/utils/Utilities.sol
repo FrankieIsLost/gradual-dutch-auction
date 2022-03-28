@@ -30,6 +30,17 @@ contract Utilities is DSTest {
         return users;
     }
 
+    //assert that two uints are approximately equal. tolerance in 1/10th of a percent
+    function assertApproxEqual(
+        uint256 expected,
+        uint256 actual,
+        uint256 tolerance
+    ) public {
+        uint256 leftBound = (expected * (1000 - tolerance)) / 1000;
+        uint256 rightBound = (expected * (1000 + tolerance)) / 1000;
+        assertTrue(leftBound < actual && actual < rightBound);
+    }
+
     //move block.number forward by a given number of blocks
     function mineBlocks(uint256 numBlocks) external {
         uint256 targetBlock = block.number + numBlocks;

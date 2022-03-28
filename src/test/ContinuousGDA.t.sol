@@ -162,7 +162,8 @@ contract ContinuousGDATest is DSTest {
             _ageOfLastAuction,
             _quantity
         );
-        assertEq(actualPrice, expectedPrice);
+        //equal within 0.1 percent
+        utils.assertApproxEqual(actualPrice, expectedPrice, 1);
     }
 
     //call out to python script for price computation

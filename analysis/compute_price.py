@@ -11,6 +11,8 @@ def main(args):
 def calculate_exp_discete(args):
     gda = ExponentialDiscreteGDA(args.price_scale / (10 ** 18), args.decay_constant / (10 ** 18))
     price = gda.get_cumulative_purchase_price(args.num_total_purchases, args.time_since_start, args.quantity)
+    ##convert price to wei 
+    price *= (10 ** 18)
     enc = encode_single('uint256', int(price))
     ## append 0x for FFI parsing 
     print("0x" + enc.hex())
@@ -20,6 +22,8 @@ def calculate_exp_continuous(args):
                                    args.decay_constant / (10 ** 18), 
                                    args.emission_rate / (10 ** 18))
     price = gda.get_cumulative_purchase_price(args.age_last_auction, args.quantity)
+    ##convert price to wei 
+    price *= (10 ** 18)
     enc = encode_single('uint256', int(price))
     ## append 0x for FFI parsing 
     print("0x" + enc.hex())

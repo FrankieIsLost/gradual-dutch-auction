@@ -83,6 +83,10 @@ abstract contract ContinuousGDA is ERC20 {
             PRBMathSD59x18.fromInt(1);
         int256 den = decayConstant.mul(timeSinceLastAuctionStart).exp();
         int256 totalCost = num1.mul(num2).div(den);
-        return uint256(totalCost.toInt());
+        //total cost is already in terms of wei so no need to scale down before
+        //conversion to uint. This is due to the fact that the original formula gives
+        //price in terms of ether but we scale up by 10^18 during computation
+        //in order to do fixed point math.
+        return uint256(totalCost);
     }
 }

@@ -38,13 +38,9 @@ contract DiscreteGDATest is DSTest {
 
     function testInitialPrice() public {
         //initialPrice should be price scale
-        uint256 initialPrice = uint256(priceScale.toInt());
-        //allow 0.1% deviation for rounding
-        uint256 leftBound = (initialPrice * 999) / 1000;
-        uint256 rightBound = (initialPrice * 1001) / 1000;
-
+        uint256 initialPrice = uint256(priceScale);
         uint256 purchasePrice = gda.purchasePrice(1);
-        assertTrue(purchasePrice >= leftBound && purchasePrice <= rightBound);
+        utils.assertApproxEqual(purchasePrice, initialPrice, 1);
     }
 
     function testInsuffientPayment() public {
@@ -158,7 +154,8 @@ contract DiscreteGDATest is DSTest {
             _timeSinceStart,
             _quantity
         );
-        assertEq(actualPrice, expectedPrice);
+        //equal within 0.1%
+        utils.assertApproxEqual(actualPrice, expectedPrice, 1);
     }
 
     //call out to python script for price computation
