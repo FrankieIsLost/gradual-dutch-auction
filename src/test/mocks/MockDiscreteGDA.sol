@@ -10,7 +10,9 @@ contract MockDiscreteGDA is DiscreteGDA {
         int256 _initialPrice,
         int256 _scaleFactor,
         int256 _decayConstant
-    ) DiscreteGDA(_name, _symbol, _initialPrice, _scaleFactor, _decayConstant) {}
+    )
+        DiscreteGDA(_name, _symbol, _initialPrice, _scaleFactor, _decayConstant)
+    {}
 
     function tokenURI(uint256)
         public
