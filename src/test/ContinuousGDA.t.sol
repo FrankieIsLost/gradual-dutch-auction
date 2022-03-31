@@ -21,7 +21,7 @@ contract ContinuousGDATest is DSTest {
     address payable[] internal users;
     MockContinuousGDA internal gda;
 
-    int256 public priceScale = PRBMathSD59x18.fromInt(1000);
+    int256 public initialPrice = PRBMathSD59x18.fromInt(1000);
     int256 public decayConstant =
         PRBMathSD59x18.fromInt(1).div(PRBMathSD59x18.fromInt(2));
     int256 public emissionRate = PRBMathSD59x18.fromInt(1);
@@ -39,7 +39,7 @@ contract ContinuousGDATest is DSTest {
         gda = new MockContinuousGDA(
             "Token",
             "TKN",
-            priceScale,
+            initialPrice,
             decayConstant,
             emissionRate
         );
@@ -90,7 +90,7 @@ contract ContinuousGDATest is DSTest {
         uint256 ageOfLastAuction = 10;
         uint256 quantity = 9;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
             decayConstant,
             emissionRate,
             ageOfLastAuction,
@@ -102,7 +102,7 @@ contract ContinuousGDATest is DSTest {
         uint256 ageOfLastAuction = 20;
         uint256 quantity = 8;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
             decayConstant,
             emissionRate,
             ageOfLastAuction,
@@ -114,7 +114,7 @@ contract ContinuousGDATest is DSTest {
         uint256 ageOfLastAuction = 30;
         uint256 quantity = 15;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
             decayConstant,
             emissionRate,
             ageOfLastAuction,
@@ -126,7 +126,7 @@ contract ContinuousGDATest is DSTest {
         uint256 ageOfLastAuction = 40;
         uint256 quantity = 35;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
             decayConstant,
             emissionRate,
             ageOfLastAuction,
@@ -136,7 +136,7 @@ contract ContinuousGDATest is DSTest {
 
     //parametrized test helper
     function checkPriceWithParameters(
-        int256 _priceScale,
+        int256 _initialPrice,
         int256 _decayConstant,
         int256 _emissionRate,
         uint256 _ageOfLastAuction,
@@ -145,7 +145,7 @@ contract ContinuousGDATest is DSTest {
         MockContinuousGDA _gda = new MockContinuousGDA(
             "Token",
             "TKN",
-            priceScale,
+            initialPrice,
             decayConstant,
             emissionRate
         );
@@ -156,7 +156,7 @@ contract ContinuousGDATest is DSTest {
         uint256 actualPrice = _gda.purchasePrice(_quantity);
         //calculate expected price from python script
         uint256 expectedPrice = calculatePrice(
-            _priceScale,
+            _initialPrice,
             _decayConstant,
             _emissionRate,
             _ageOfLastAuction,
@@ -168,7 +168,7 @@ contract ContinuousGDATest is DSTest {
 
     //call out to python script for price computation
     function calculatePrice(
-        int256 _priceScale,
+        int256 _initialPrice,
         int256 _decayConstant,
         int256 _emissionRate,
         uint256 _ageOfLastAuction,
@@ -178,8 +178,8 @@ contract ContinuousGDATest is DSTest {
         inputs[0] = "python3";
         inputs[1] = "analysis/compute_price.py";
         inputs[2] = "exp_continuous";
-        inputs[3] = "--price_scale";
-        inputs[4] = uint256(_priceScale).toString();
+        inputs[3] = "--initial_price";
+        inputs[4] = uint256(_initialPrice).toString();
         inputs[5] = "--decay_constant";
         inputs[6] = uint256(_decayConstant).toString();
         inputs[7] = "--emission_rate";

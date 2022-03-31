@@ -38,7 +38,7 @@ contract Utilities is DSTest {
     ) public {
         uint256 leftBound = (expected * (1000 - tolerance)) / 1000;
         uint256 rightBound = (expected * (1000 + tolerance)) / 1000;
-        assertTrue(leftBound < actual && actual < rightBound);
+        assertTrue(leftBound <= actual && actual <= rightBound);
     }
 
     //move block.number forward by a given number of blocks

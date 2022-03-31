@@ -12,8 +12,8 @@ abstract contract ContinuousGDA is ERC20 {
     /// ---- Pricing Parameters -----
     /// -----------------------------
 
-    ///@notice parameter that scales initial price, stored as a 59x18 fixed precision number
-    int256 internal immutable priceScale;
+    ///@notice parameter that controls initial price, stored as a 59x18 fixed precision number
+    int256 internal immutable initialPrice;
 
     ///@notice parameter that controls price decay, stored as a 59x18 fixed precision number
     int256 internal immutable decayConstant;
@@ -33,11 +33,11 @@ abstract contract ContinuousGDA is ERC20 {
     constructor(
         string memory _name,
         string memory _symbol,
-        int256 _priceScale,
+        int256 _initialPrice,
         int256 _decayConstant,
         int256 _emissionRate
     ) ERC20(_name, _symbol, 18) {
-        priceScale = _priceScale;
+        initialPrice = _initialPrice;
         decayConstant = _decayConstant;
         emissionRate = _emissionRate;
         lastAvailableAuctionStartTime = int256(block.timestamp).fromInt();
@@ -78,7 +78,7 @@ abstract contract ContinuousGDA is ERC20 {
         int256 quantity = int256(numTokens).fromInt();
         int256 timeSinceLastAuctionStart = int256(block.timestamp).fromInt() -
             lastAvailableAuctionStartTime;
-        int256 num1 = priceScale.div(decayConstant);
+        int256 num1 = initialPrice.div(decayConstant);
         int256 num2 = decayConstant.mul(quantity).div(emissionRate).exp() -
             PRBMathSD59x18.fromInt(1);
         int256 den = decayConstant.mul(timeSinceLastAuctionStart).exp();

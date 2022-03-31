@@ -15,8 +15,12 @@ abstract contract DiscreteGDA is ERC721 {
     /// ---- Pricing Parameters -----
     /// -----------------------------
 
-    ///@notice parameter that scales initial price, stored as a 59x18 fixed precision number
-    int256 internal immutable priceScale;
+    ///@notice parameter that controls initial price, stored as a 59x18 fixed precision number
+    int256 internal immutable initialPrice;
+
+    ///@notice parameter that controls how much the starting price of each successive auction increases by,
+    /// stored as a 59x18 fixed precision number
+    int256 internal immutable scaleFactor;
 
     ///@notice parameter that controls price decay, stored as a 59x18 fixed precision number
     int256 internal immutable decayConstant;
@@ -31,10 +35,12 @@ abstract contract DiscreteGDA is ERC721 {
     constructor(
         string memory _name,
         string memory _symbol,
-        int256 _priceScale,
+        int256 _initialPrice,
+        int256 _scaleFactor,
         int256 _decayConstant
     ) ERC721(_name, _symbol) {
-        priceScale = _priceScale;
+        initialPrice = _initialPrice;
+        scaleFactor = _scaleFactor;
         decayConstant = _decayConstant;
         auctionStartTime = int256(block.timestamp).fromInt();
     }
@@ -63,12 +69,12 @@ abstract contract DiscreteGDA is ERC721 {
         int256 numSold = int256(currentId).fromInt();
         int256 timeSinceStart = int256(block.timestamp).fromInt() -
             auctionStartTime;
-        int256 num1 = (numSold - timeSinceStart.mul(decayConstant)).exp().mul(
-            priceScale
-        );
-        int256 num2 = quantity.exp() - PRBMathSD59x18.fromInt(1);
-        int256 den = PRBMathSD59x18.e() - PRBMathSD59x18.fromInt(1);
-        int256 totalCost = num1.mul(num2).div(den);
+
+        int256 num1 = initialPrice.mul(scaleFactor.pow(numSold));
+        int256 num2 = scaleFactor.pow(quantity) - PRBMathSD59x18.fromInt(1);
+        int256 den1 = decayConstant.mul(timeSinceStart).exp();
+        int256 den2 = scaleFactor - PRBMathSD59x18.fromInt(1);
+        int256 totalCost = num1.mul(num2).div(den1.mul(den2));
         //total cost is already in terms of wei so no need to scale down before
         //conversion to uint. This is due to the fact that the original formula gives
         //price in terms of ether but we scale up by 10^18 during computation

@@ -21,9 +21,11 @@ contract DiscreteGDATest is DSTest {
     address payable[] internal users;
     MockDiscreteGDA internal gda;
 
-    int256 public priceScale = PRBMathSD59x18.fromInt(1000);
+    int256 public initialPrice = PRBMathSD59x18.fromInt(1000);
     int256 public decayConstant =
         PRBMathSD59x18.fromInt(1).div(PRBMathSD59x18.fromInt(2));
+    int256 public scaleFactor =
+        PRBMathSD59x18.fromInt(11).div(PRBMathSD59x18.fromInt(10));
 
     //encodings for revert tests
     bytes insufficientPayment =
@@ -33,14 +35,20 @@ contract DiscreteGDATest is DSTest {
         utils = new Utilities();
         users = utils.createUsers(5);
 
-        gda = new MockDiscreteGDA("Token", "TKN", priceScale, decayConstant);
+        gda = new MockDiscreteGDA(
+            "Token",
+            "TKN",
+            initialPrice,
+            scaleFactor,
+            decayConstant
+        );
     }
 
     function testInitialPrice() public {
         //initialPrice should be price scale
-        uint256 initialPrice = uint256(priceScale);
+        uint256 initial = uint256(initialPrice);
         uint256 purchasePrice = gda.purchasePrice(1);
-        utils.assertApproxEqual(purchasePrice, initialPrice, 1);
+        utils.assertApproxEqual(purchasePrice, initial, 1);
     }
 
     function testInsuffientPayment() public {
@@ -72,7 +80,8 @@ contract DiscreteGDATest is DSTest {
         uint256 timeSinceStart = 10;
         uint256 quantity = 9;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
+            scaleFactor,
             decayConstant,
             numTotalPurchases,
             timeSinceStart,
@@ -85,7 +94,8 @@ contract DiscreteGDATest is DSTest {
         uint256 timeSinceStart = 10;
         uint256 quantity = 9;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
+            scaleFactor,
             decayConstant,
             numTotalPurchases,
             timeSinceStart,
@@ -98,7 +108,8 @@ contract DiscreteGDATest is DSTest {
         uint256 timeSinceStart = 10;
         uint256 quantity = 9;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
+            scaleFactor,
             decayConstant,
             numTotalPurchases,
             timeSinceStart,
@@ -111,7 +122,8 @@ contract DiscreteGDATest is DSTest {
         uint256 timeSinceStart = 100;
         uint256 quantity = 1;
         checkPriceWithParameters(
-            priceScale,
+            initialPrice,
+            scaleFactor,
             decayConstant,
             numTotalPurchases,
             timeSinceStart,
@@ -121,7 +133,8 @@ contract DiscreteGDATest is DSTest {
 
     //parametrized test helper
     function checkPriceWithParameters(
-        int256 _priceScale,
+        int256 _initialPrice,
+        int256 _scaleFactor,
         int256 _decayConstant,
         uint256 _numTotalPurchases,
         uint256 _timeSinceStart,
@@ -130,7 +143,8 @@ contract DiscreteGDATest is DSTest {
         MockDiscreteGDA _gda = new MockDiscreteGDA(
             "Token",
             "TKN",
-            _priceScale,
+            _initialPrice,
+            _scaleFactor,
             _decayConstant
         );
 
@@ -148,7 +162,8 @@ contract DiscreteGDATest is DSTest {
         uint256 actualPrice = _gda.purchasePrice(_quantity);
         //calculate expected price from python script
         uint256 expectedPrice = calculatePrice(
-            _priceScale,
+            _initialPrice,
+            _scaleFactor,
             _decayConstant,
             _numTotalPurchases,
             _timeSinceStart,
@@ -160,26 +175,29 @@ contract DiscreteGDATest is DSTest {
 
     //call out to python script for price computation
     function calculatePrice(
-        int256 _priceScale,
+        int256 _initialPrice,
+        int256 _scaleFactor,
         int256 _decayConstant,
         uint256 _numTotalPurchases,
         uint256 _timeSinceStart,
         uint256 _quantity
     ) private returns (uint256) {
-        string[] memory inputs = new string[](13);
+        string[] memory inputs = new string[](15);
         inputs[0] = "python3";
         inputs[1] = "analysis/compute_price.py";
         inputs[2] = "exp_discrete";
-        inputs[3] = "--price_scale";
-        inputs[4] = uint256(_priceScale).toString();
-        inputs[5] = "--decay_constant";
-        inputs[6] = uint256(_decayConstant).toString();
-        inputs[7] = "--num_total_purchases";
-        inputs[8] = _numTotalPurchases.toString();
-        inputs[9] = "--time_since_start";
-        inputs[10] = _timeSinceStart.toString();
-        inputs[11] = "--quantity";
-        inputs[12] = _quantity.toString();
+        inputs[3] = "--initial_price";
+        inputs[4] = uint256(_initialPrice).toString();
+        inputs[5] = "--scale_factor";
+        inputs[6] = uint256(_scaleFactor).toString();
+        inputs[7] = "--decay_constant";
+        inputs[8] = uint256(_decayConstant).toString();
+        inputs[9] = "--num_total_purchases";
+        inputs[10] = _numTotalPurchases.toString();
+        inputs[11] = "--time_since_start";
+        inputs[12] = _timeSinceStart.toString();
+        inputs[13] = "--quantity";
+        inputs[14] = _quantity.toString();
         bytes memory res = vm.ffi(inputs);
         uint256 price = abi.decode(res, (uint256));
         return price;

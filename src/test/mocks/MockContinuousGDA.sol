@@ -7,14 +7,14 @@ contract MockContinuousGDA is ContinuousGDA {
     constructor(
         string memory _name,
         string memory _symbol,
-        int256 _priceScale,
+        int256 _initialPrice,
         int256 _decayConstant,
         int256 _emissionRate
     )
         ContinuousGDA(
             _name,
             _symbol,
-            _priceScale,
+            _initialPrice,
             _decayConstant,
             _emissionRate
         )

@@ -4,12 +4,12 @@ import argparse
 
 def main(args): 
     if (args.type == 'exp_discrete'): 
-        calculate_exp_discete(args)
+        calculate_exp_discrete(args)
     if (args.type == 'exp_continuous'):
         calculate_exp_continuous(args)
     
-def calculate_exp_discete(args):
-    gda = ExponentialDiscreteGDA(args.price_scale / (10 ** 18), args.decay_constant / (10 ** 18))
+def calculate_exp_discrete(args):
+    gda = ExponentialDiscreteGDA(args.initial_price / (10 ** 18), args.decay_constant / (10 ** 18), args.scale_factor / (10 ** 18))
     price = gda.get_cumulative_purchase_price(args.num_total_purchases, args.time_since_start, args.quantity)
     ##convert price to wei 
     price *= (10 ** 18)
@@ -18,7 +18,7 @@ def calculate_exp_discete(args):
     print("0x" + enc.hex())
 
 def calculate_exp_continuous(args):
-    gda = ExponentialContinuousGDA(args.price_scale / (10 ** 18), 
+    gda = ExponentialContinuousGDA(args.initial_price / (10 ** 18), 
                                    args.decay_constant / (10 ** 18), 
                                    args.emission_rate / (10 ** 18))
     price = gda.get_cumulative_purchase_price(args.age_last_auction, args.quantity)
@@ -31,9 +31,10 @@ def calculate_exp_continuous(args):
 def parse_args(): 
     parser = argparse.ArgumentParser()
     parser.add_argument("type")
-    parser.add_argument("--price_scale", type=int)
+    parser.add_argument("--scale_factor", type=int)
     parser.add_argument("--decay_constant", type=int)
     parser.add_argument("--emission_rate", type=int)
+    parser.add_argument("--initial_price", type=int)
     parser.add_argument("--num_total_purchases", type=int)
     parser.add_argument("--time_since_start", type=int)
     parser.add_argument("--age_last_auction", type=int)
