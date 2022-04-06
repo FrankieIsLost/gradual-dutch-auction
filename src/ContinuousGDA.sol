@@ -63,14 +63,15 @@ abstract contract ContinuousGDA is ERC20 {
         }
         //mint tokens
         _mint(to, numTokens);
+        //update last available auction
+        lastAvailableAuctionStartTime += secondsOfEmissionsToPurchase;
+
         //refund extra payment
         uint256 refund = msg.value - cost;
         (bool sent, ) = msg.sender.call{value: refund}("");
         if (!sent) {
             revert UnableToRefund();
         }
-        //update last available auction
-        lastAvailableAuctionStartTime += secondsOfEmissionsToPurchase;
     }
 
     ///@notice calculate purchase price using exponential continuous GDA formula
