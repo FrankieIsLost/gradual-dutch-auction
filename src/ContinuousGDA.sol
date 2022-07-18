@@ -46,14 +46,14 @@ abstract contract ContinuousGDA is ERC20 {
     ///@notice purchase a specific number of tokens from the GDA
     function purchaseTokens(uint256 numTokens, address to) public payable {
         //number of seconds of token emissions that are available to be purchased
-        int256 secondsOfEmissionsAvaiable = int256(block.timestamp).fromInt() -
+        int256 secondsOfEmissionsAvailable = int256(block.timestamp).fromInt() -
             lastAvailableAuctionStartTime;
         //number of seconds of emissions are being purchased
         int256 secondsOfEmissionsToPurchase = int256(numTokens).fromInt().div(
             emissionRate
         );
         //ensure there's been sufficient emissions to allow purchase
-        if (secondsOfEmissionsToPurchase > secondsOfEmissionsAvaiable) {
+        if (secondsOfEmissionsToPurchase > secondsOfEmissionsAvailable) {
             revert InsufficientAvailableTokens();
         }
 
