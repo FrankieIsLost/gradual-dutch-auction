@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {PRBMathSD59x18} from "prb-math/PRBMathSD59x18.sol";
 
-///@notice Implementation of Continuous GDA with exponential price decay for ERC721
+///@notice Implementation of Continuous GDA with exponential price decay for ERC20
 abstract contract ContinuousGDA is ERC20 {
     using PRBMathSD59x18 for int256;
 
